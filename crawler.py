@@ -11,6 +11,7 @@ crawl_types = ['1']
 robotstxt = {}
 db = {'menus': {}, 'selectors': {}}
 
+pathmuststartwith = '/'
 limithost = False
 onlyrecordhost = True
 
@@ -65,6 +66,8 @@ def crawl(url, cooldown=(86400 * 1)):
         if limithost:
             if not limithost == req.host:
                 return False
+        if not req.path.startswith(pathmuststartwith):
+            return False
         save()
         if req.type in crawl_types:
             if allowed_to_crawl(req.url()):
@@ -82,6 +85,8 @@ def crawl(url, cooldown=(86400 * 1)):
                             if onlyrecordhost:
                                 if not selector.request().host == limithost:
                                     record = False
+                        if not req.path.startswith(pathmuststartwith):
+                            record = False
                         if record:
                             print('Recording selector for URL', surl)
                             # record!
