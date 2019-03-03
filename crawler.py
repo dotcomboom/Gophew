@@ -15,6 +15,7 @@ limithost = False
 onlyrecordhost = True
 
 dbfilename = 'db.json'
+delay = 10
 
 if os.path.isfile(dbfilename):
     with open(dbfilename, 'r') as fp:
@@ -68,7 +69,7 @@ def crawl(url, cooldown=(86400 * 1)):
         if req.type in crawl_types:
             if allowed_to_crawl(req.url()):
                 print('Waiting to crawl', req.url() + '...')
-                time.sleep(10)
+                time.sleep(delay)
                 resp = req.get()
                 print('Crawling ' + req.url())
                 db['menus'][req.url()] = {'last_crawled': 0}
