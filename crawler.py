@@ -11,14 +11,19 @@ crawl_types = ['1']
 robotstxt = {}
 db = {'menus': {}, 'selectors': {}}
 
-if os.path.isfile('db.json'):
-    with open('db.json', 'r') as fp:
+limithost = False
+onlyrecordhost = True
+
+dbfilename = 'db.json'
+
+if os.path.isfile(dbfilename):
+    with open(dbfilename, 'r') as fp:
         db = json.load(fp)
 
 
 def save():
     db_out = json.dumps(db, indent=4)
-    with open('db.json', 'w') as outfile:
+    with open(dbfilename, 'w') as outfile:
         outfile.write(db_out)
         outfile.close()
     print('Saved!')
@@ -49,7 +54,6 @@ def allowed_to_crawl(url):
 
 
 def crawl(url, cooldown=(86400 * 1)):
-    save()
     tocrawl = []
     req = pituophis.parse_url(url)
     if req.url() in db['menus']:
@@ -57,6 +61,10 @@ def crawl(url, cooldown=(86400 * 1)):
             print('Not crawling', url, 'due to', str(cooldown) + 'ms cooldown')
             return False
     try:
+        if limithost:
+            if not limithost == req.host:
+                return False
+        save()
         if req.type in crawl_types:
             if allowed_to_crawl(req.url()):
                 print('Waiting to crawl', req.url() + '...')
@@ -68,19 +76,25 @@ def crawl(url, cooldown=(86400 * 1)):
                 for selector in resp.menu():
                     if selector.type not in ignore_types:
                         surl = selector.request().url()
-                        print('Recording selector for URL', surl)
-                        # record!
-                        if surl not in db['selectors']:
-                            db['selectors'][surl] = {}
-                            db['selectors'][surl]['titles'] = []
-                            db['selectors'][surl]['referrers'] = []
-                        if selector.text not in db['selectors'][surl]['titles']:
-                            db['selectors'][surl]['titles'].append(selector.text)
-                        if req.url() not in db['selectors'][surl]['referrers']:
-                            db['selectors'][surl]['referrers'].append(req.url())
-                        # if it's a crawl type, let's do that uwu
-                        if selector.type in crawl_types:
-                            tocrawl.append(selector.request().url())
+                        record = True
+                        if limithost:
+                            if onlyrecordhost:
+                                if not selector.request().host == limithost:
+                                    record = False
+                        if record:
+                            print('Recording selector for URL', surl)
+                            # record!
+                            if surl not in db['selectors']:
+                                db['selectors'][surl] = {}
+                                db['selectors'][surl]['titles'] = []
+                                db['selectors'][surl]['referrers'] = []
+                            if selector.text not in db['selectors'][surl]['titles']:
+                                db['selectors'][surl]['titles'].append(selector.text)
+                            if req.url() not in db['selectors'][surl]['referrers']:
+                                db['selectors'][surl]['referrers'].append(req.url())
+                            # if it's a crawl type, let's do that uwu
+                            if selector.type in crawl_types:
+                                tocrawl.append(selector.request().url())
                     if selector.type == '3':
                         dead = True
                 if dead:
