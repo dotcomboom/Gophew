@@ -87,6 +87,8 @@ def crawl(url, cooldown=(86400 * 1)):
                                     record = False
                         if not req.path.startswith(pathmuststartwith):
                             record = False
+                        if '../' in surl:
+                            record = False
                         if record:
                             print('Recording selector for URL', surl)
                             # record!
