@@ -7,14 +7,14 @@ import pituophis
 ###########################
 
 settings = {
-    "limit_host": "your.live.host",  # Host to limit to (for indexing single servers, which is highly recommended)
-    "only_record_host": True,
-    "path_must_start_with": "/",  # What the path/selector must start with
-    "db_filename": "db.json",  # Filename to use for the database
-    "delay": 2,  # x second delay between grabbing files; please be courteous to servers you don't own! 
-    "crawl_url": "gopher://your.live.host/1/",  # URL to crawl (after finished updating the index)
-    "cooldown": 86400,  # Required cooldown in ms before crawling a URL again
-    "ignore_types": ['i', '3']  # Types of items that should be ignored and not recorded
+    'limit_host': 'your.live.host',  # Host to limit to (for indexing single servers, which is highly recommended)
+    'only_record_host': True,
+    'path_must_start_with': '/',  # What the path/selector must start with
+    'db_filename': 'db.json',  # Filename to use for the database
+    'delay': 2,  # x second delay between grabbing files; please be courteous to servers you don't own! 
+    'crawl_url': 'gopher://your.live.host/1/',  # URL to crawl (after finished updating the index)
+    'cooldown': 86400,  # Required cooldown in ms before crawling a URL again
+    'ignore_types': ['i', '3']  # Types of items that should be ignored and not recorded
 }
 
 ###########################
@@ -137,5 +137,5 @@ for item in db['items'].copy().keys():
     if req.type == '1':
         crawl(item, settings['cooldown'])
 
-crawl(settings["crawl_url"], settings['cooldown'])
+crawl(settings['crawl_url'], settings['cooldown'])
 save()
