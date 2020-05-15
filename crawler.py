@@ -5,18 +5,18 @@ import traceback
 import pituophis
 
 # Ignored types
-ignore_types = ['i', '3', 'h']
+ignore_types = ['i', '3']
 crawl_types = ['1']
 
 robotstxt = {}
-db = {'menus': {}, 'selectors': {}}
+db = {'menus': {}, 'items': {}}
 
-pathmuststartwith = '/'
-limithost = False
+pathmuststartwith = '/w2krepo/'
+limithost = "gopher.somnolescent.net"
 onlyrecordhost = True
 
 dbfilename = 'db.json'
-delay = 10
+delay = 2
 
 if os.path.isfile(dbfilename):
     with open(dbfilename, 'r') as fp:
@@ -77,37 +77,37 @@ def crawl(url, cooldown=(86400 * 1)):
                 print('Crawling ' + req.url())
                 db['menus'][req.url()] = {'last_crawled': 0}
                 dead = False
-                for selector in resp.menu():
-                    if selector.type not in ignore_types:
-                        surl = selector.request().url()
+                for item in resp.menu():
+                    if item.type not in ignore_types:
+                        surl = item.request().url()
                         record = True
                         if limithost:
                             if onlyrecordhost:
-                                if not selector.request().host == limithost:
+                                if not item.request().host == limithost:
                                     record = False
                         if not req.path.startswith(pathmuststartwith):
                             record = False
                         if '../' in surl:
                             record = False
                         if record:
-                            print('Recording selector for URL', surl)
+                            print('Recording item for URL', surl)
                             # record!
-                            if surl not in db['selectors']:
-                                db['selectors'][surl] = {}
-                                db['selectors'][surl]['titles'] = []
-                                db['selectors'][surl]['referrers'] = []
-                            if selector.text not in db['selectors'][surl]['titles']:
-                                db['selectors'][surl]['titles'].append(selector.text)
-                            if req.url() not in db['selectors'][surl]['referrers']:
-                                db['selectors'][surl]['referrers'].append(req.url())
+                            if surl not in db['items']:
+                                db['items'][surl] = {}
+                                db['items'][surl]['titles'] = []
+                                db['items'][surl]['referrers'] = []
+                            if item.text not in db['items'][surl]['titles']:
+                                db['items'][surl]['titles'].append(item.text)
+                            if req.url() not in db['items'][surl]['referrers']:
+                                db['items'][surl]['referrers'].append(req.url())
                             # if it's a crawl type, let's do that uwu
-                            if selector.type in crawl_types:
-                                tocrawl.append(selector.request().url())
-                    if selector.type == '3':
+                            if item.type in crawl_types:
+                                tocrawl.append(item.request().url())
+                    if item.type == '3':
                         dead = True
                 if dead:
                     db['menus'].pop(req.url(), None)
-                    db['selectors'].pop(req.url(), None)
+                    db['items'].pop(req.url(), None)
                 else:
                     db['menus'][req.url()] = {'last_crawled': time.time()}
                 save()
@@ -118,15 +118,16 @@ def crawl(url, cooldown=(86400 * 1)):
         print('WARN: Failed to fetch', req.url())
         traceback.print_exc()
         db['menus'].pop(req.url(), None)
-        db['selectors'].pop(req.url(), None)
+        db['items'].pop(req.url(), None)
 
 
 for key in db['menus'].copy().keys():
     crawl(key)
 
-for selector in db['selectors'].copy().keys():
-    req = pituophis.parse_url(selector)
+for item in db['items'].copy().keys():
+    req = pituophis.parse_url(item)
     if req.type == '1':
-        crawl(selector)
+        crawl(item)
 
+crawl("gopher://gopher.somnolescent.net/1/w2krepo/", 0)
 save()

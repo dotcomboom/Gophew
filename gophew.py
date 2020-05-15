@@ -11,20 +11,20 @@ def alt(request):
         typestring = request.path.replace('/search', '').replace('/', '')
         types = list(typestring)
         menu = []
-        menu.append(pituophis.Selector(itype='1', text='Back to Gophew!', path='/', host=request.host, port=request.port))
-        menu.append(pituophis.Selector(itype='7', text='Try another search', path='/search', host=request.host, port=request.port))
+        menu.append(pituophis.Item(itype='1', text='Back to Gophew!', path='/', host=request.host, port=request.port))
+        menu.append(pituophis.Item(itype='7', text='Try another search', path='/search', host=request.host, port=request.port))
         if not request.path == '/search':
-            menu.append(pituophis.Selector(itype='7', text='Try another search with the same criteria', path=request.path, host=request.host, port=request.port))
-        menu.append(pituophis.Selector(text='Results for ' + "'" + request.query + "' (out of " + str(len(db['selectors'])) + ')'))
+            menu.append(pituophis.Item(itype='7', text='Try another search with the same criteria', path=request.path, host=request.host, port=request.port))
+        menu.append(pituophis.Item(text='Results for ' + "'" + request.query + "' (out of " + str(len(db['items'])) + ')'))
         if len(types):
-            menu.append(pituophis.Selector(text='Filtering types: ' + (', '.join(types))))
-        selectors = db['selectors']
-        for selector in selectors:
-            sampling = selector
-            for title in db['selectors'][selector]['titles']:
+            menu.append(pituophis.Item(text='Filtering types: ' + (', '.join(types))))
+        Items = db['items']
+        for Item in Items:
+            sampling = Item
+            for title in db['items'][Item]['titles']:
                 sampling += title
             if request.query.lower() in sampling.lower():
-                req = pituophis.parse_url(selector)
+                req = pituophis.parse_url(Item)
                 yes = False
                 if len(types) == 0:
                     yes = True
@@ -33,16 +33,16 @@ def alt(request):
                         yes = True
                 if yes:
                     try:
-                        menu.append(pituophis.Selector(text=''))
-                        menu.append(pituophis.Selector(itype=req.type, text=selectors[selector]['titles'][0], path=req.path, host=req.host, port=req.port))
-                        menu.append(pituophis.Selector(text='URL: ' + req.url()))
-                        if len(selectors[selector]['titles']) > 1:
-                            menu.append(pituophis.Selector(text='Alternate titles:'))
-                            for title in selectors[selector]['titles'][1:]:
-                                menu.append(pituophis.Selector(text='  ' + title))
-                            menu.append(pituophis.Selector(text='Referred by:'))
-                            for referrer in selectors[selector]['referrers']:
-                                menu.append(pituophis.Selector(text='  ' + referrer))
+                        menu.append(pituophis.Item(text=''))
+                        menu.append(pituophis.Item(itype=req.type, text=Items[Item]['titles'][0], path=req.path, host=req.host, port=req.port))
+                        menu.append(pituophis.Item(text='URL: ' + req.url()))
+                        if len(Items[Item]['titles']) > 1:
+                            menu.append(pituophis.Item(text='Alternate titles:'))
+                            for title in Items[Item]['titles'][1:]:
+                                menu.append(pituophis.Item(text='  ' + title))
+                            menu.append(pituophis.Item(text='Referred by:'))
+                            for referrer in Items[Item]['referrers']:
+                                menu.append(pituophis.Item(text='  ' + referrer))
                     except:
                         print()
         return menu
@@ -50,4 +50,4 @@ def alt(request):
         return 'What?'
 
 
-pituophis.serve("127.0.0.1", 1337, pub_dir='pub/', alt_handler=alt, tls=False)  # typical Gopher port is 70
+pituophis.serve("127.0.0.1", 70, pub_dir='pub/', alt_handler=alt)  # typical Gopher port is 70

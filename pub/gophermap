@@ -4,11 +4,10 @@
 | |_| | (_) | |_) | | | |  __/\ V  V /|_|
  \____|\___/| .__/|_| |_|\___| \_/\_/ (_)
             |_|
-The Gopher search engine uwu
 
 7Search for all types	/search
 7Search for text files	/search/0
 7Search for directories	/search/1
 7Search for binaries	/search/945
 7Search for images	/search/Ig
-7Search for search engines ;O	/search/7
+7Search for search engines	/search/7
