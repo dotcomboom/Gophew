@@ -1,5 +1,6 @@
 import os
 import json
+import copy
 import pituophis as p
 
 # Gophew settings
@@ -75,7 +76,7 @@ def alt(request):
                         pass
         return menu
     else:
-        e = p.errors['404']
+        e = copy.copy(p.errors['404'])
         e.text = e.text.format(request.path)
         return e
 
