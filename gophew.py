@@ -75,7 +75,9 @@ def alt(request):
                         pass
         return menu
     else:
-        return p.errors['404']
+        e = p.errors['404']
+        e.text = e.text.format(request.path)
+        return e
 
 
 p.serve(settings['host'], settings['port'], pub_dir=settings['pub_dir'], alt_handler=alt)  # typical Gopher port is 70
