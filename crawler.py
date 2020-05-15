@@ -11,21 +11,28 @@ crawl_types = ['1']
 robotstxt = {}
 db = {'menus': {}, 'items': {}}
 
-pathmuststartwith = '/w2krepo/'
-limithost = "gopher.somnolescent.net"
-onlyrecordhost = True
+###########################
 
-dbfilename = 'db.json'
-delay = 2
+settings = {
+    "limit_host": "gopher.somnolescent.net",  # Host to limit to (highly recommended!)
+    "only_record_host": True,
+    "path_must_start_with": "/w2krepo/",  # What the path/selector must start with
+    "db_filename": "w2krepo.json",  # Filename to use for the database
+    "delay": 2,  # x second delay between grabbing files; please be courteous to servers you don't own! 
+    "crawl_url": "gopher://gopher.somnolescent.net/1/w2krepo/",  # URL to crawl (after finished updating the index)
+    "cooldown": 86400  # required cooldown in ms before crawling a URL again
+}
 
-if os.path.isfile(dbfilename):
-    with open(dbfilename, 'r') as fp:
+###########################
+
+if os.path.isfile(settings['db_filename']):
+    with open(settings['db_filename'], 'r') as fp:
         db = json.load(fp)
 
 
 def save():
     db_out = json.dumps(db, indent=4)
-    with open(dbfilename, 'w') as outfile:
+    with open(settings['db_filename'], 'w') as outfile:
         outfile.write(db_out)
         outfile.close()
     print('Saved!')
@@ -43,7 +50,8 @@ def allowed_to_crawl(url):
     allowed = True
     for line in robots.replace('\r\n', '\n').split('\n'):
         if line.startswith('Disallow:'):
-            line = line.replace('Disallow: ', '').replace('Disallow:', '').strip('/')
+            line = line.replace('Disallow: ', '').replace(
+                'Disallow:', '').strip('/')
             if line in req.path:
                 allowed = False
     if allowed:
@@ -55,7 +63,7 @@ def allowed_to_crawl(url):
     return allowed
 
 
-def crawl(url, cooldown=(86400 * 1)):
+def crawl(url, cooldown=86400):
     tocrawl = []
     req = pituophis.parse_url(url)
     if req.url() in db['menus']:
@@ -63,16 +71,16 @@ def crawl(url, cooldown=(86400 * 1)):
             print('Not crawling', url, 'due to', str(cooldown) + 'ms cooldown')
             return False
     try:
-        if limithost:
-            if not limithost == req.host:
+        if settings['limit_host']:
+            if not settings['limit_host'] == req.host:
                 return False
-        if not req.path.startswith(pathmuststartwith):
+        if not req.path.startswith(settings['path_must_start_with']):
             return False
         save()
         if req.type in crawl_types:
             if allowed_to_crawl(req.url()):
                 print('Waiting to crawl', req.url() + '...')
-                time.sleep(delay)
+                time.sleep(settings['delay'])
                 resp = req.get()
                 print('Crawling ' + req.url())
                 db['menus'][req.url()] = {'last_crawled': 0}
@@ -81,11 +89,11 @@ def crawl(url, cooldown=(86400 * 1)):
                     if item.type not in ignore_types:
                         surl = item.request().url()
                         record = True
-                        if limithost:
-                            if onlyrecordhost:
-                                if not item.request().host == limithost:
+                        if settings['limit_host']:
+                            if settings['only_record_host']:
+                                if not item.request().host == settings['limit_host']:
                                     record = False
-                        if not req.path.startswith(pathmuststartwith):
+                        if not req.path.startswith(settings['path_must_start_with']):
                             record = False
                         if '../' in surl:
                             record = False
@@ -99,7 +107,8 @@ def crawl(url, cooldown=(86400 * 1)):
                             if item.text not in db['items'][surl]['titles']:
                                 db['items'][surl]['titles'].append(item.text)
                             if req.url() not in db['items'][surl]['referrers']:
-                                db['items'][surl]['referrers'].append(req.url())
+                                db['items'][surl]['referrers'].append(
+                                    req.url())
                             # if it's a crawl type, let's do that uwu
                             if item.type in crawl_types:
                                 tocrawl.append(item.request().url())
@@ -112,7 +121,7 @@ def crawl(url, cooldown=(86400 * 1)):
                     db['menus'][req.url()] = {'last_crawled': time.time()}
                 save()
                 for tc in tocrawl:
-                    crawl(tc)
+                    crawl(tc, settings['cooldown'])
                     save()
     except Exception:
         print('WARN: Failed to fetch', req.url())
@@ -122,12 +131,12 @@ def crawl(url, cooldown=(86400 * 1)):
 
 
 for key in db['menus'].copy().keys():
-    crawl(key)
+    crawl(key, settings['cooldown'])
 
 for item in db['items'].copy().keys():
     req = pituophis.parse_url(item)
     if req.type == '1':
-        crawl(item)
+        crawl(item, settings['cooldown'])
 
-crawl("gopher://gopher.somnolescent.net/1/w2krepo/", 0)
+crawl(settings["crawl_url"], settings['cooldown'])
 save()
