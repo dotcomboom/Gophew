@@ -10,6 +10,7 @@ settings = {
     'search_path': '/w2krepo/search', # What the path must start with in order to do a search (a file shouldn't exist here for the alt handler to go off)
     'typestrings': True, # Allow filtering searches by type, i.e. /search01 for textfiles and directories.
     'root_path': '/w2krepo/',  # Path to link to on the results page
+    
     # Below lines can be disabled by setting them to None
     'root_text': 'Back to root',
     'new_search_text': 'Try another search', 
@@ -77,4 +78,4 @@ def alt(request):
         return p.errors['404']
 
 
-p.serve(settings['host'], settings['port'], settings['pub_dir'], alt_handler=alt)  # typical Gopher port is 70
+p.serve(settings['host'], settings['port'], pub_dir=settings['pub_dir'], alt_handler=alt)  # typical Gopher port is 70
