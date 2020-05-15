@@ -15,7 +15,12 @@ settings = {
     'new_search_text': 'Try another search', 
     'new_search_text_same_filter': 'Try another search with the same criteria',
     'results_caption': 'Results for {} (out of {} items)',
-    'types_caption': 'Filtering types: {}'
+    'types_caption': 'Filtering types: {}',
+
+    # Pituophis server options
+    'host': '127.0.0.1',
+    'port': 70,
+    'pub_dir': 'pub/'
 }
 
 if os.path.isfile(settings['index']):
@@ -29,13 +34,14 @@ def alt(request):
         menu = []
         if not settings['root_text'] is None:
             menu.append(p.Item(itype='1', text=settings['root_text'], path='/', host=request.host, port=request.port))
+        if not settings['new_search_text'] is None:
             menu.append(p.Item(itype='7', text=settings['new_search_text'], path=settings['search_path'], host=request.host, port=request.port))
-        if not request.path == settings['search_path']:
+        if (not request.path == settings['search_path']) and not settings['new_search_text_same_filter'] is None:
             menu.append(p.Item(itype='7', text=settings['new_search_text_same_filter'], path=request.path, host=request.host, port=request.port))
         if not settings['results_caption'] is None:
             menu.append(p.Item(text=settings['results_caption'].format(request.query, len(db['items']))))
-        if len(types):
-            if not settings['types_caption'] is None:
+        if not settings['types_caption'] is None:
+            if len(types):
                 menu.append(p.Item(text=settings['types_caption'].format(', '.join(types))))
         items = db['items']
         for item in items:
@@ -71,4 +77,4 @@ def alt(request):
         return p.errors['404']
 
 
-p.serve("127.0.0.1", 70, pub_dir='pub/', alt_handler=alt)  # typical Gopher port is 70
+p.serve(settings['host'], settings['port'], settings['pub_dir'], alt_handler=alt)  # typical Gopher port is 70
