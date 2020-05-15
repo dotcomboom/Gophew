@@ -4,13 +4,6 @@ import time
 import traceback
 import pituophis
 
-# Ignored types
-ignore_types = ['i', '3']
-crawl_types = ['1']
-
-robotstxt = {}
-db = {'menus': {}, 'items': {}}
-
 ###########################
 
 settings = {
@@ -20,10 +13,16 @@ settings = {
     "db_filename": "w2krepo.json",  # Filename to use for the database
     "delay": 2,  # x second delay between grabbing files; please be courteous to servers you don't own! 
     "crawl_url": "gopher://gopher.somnolescent.net/1/w2krepo/",  # URL to crawl (after finished updating the index)
-    "cooldown": 86400  # required cooldown in ms before crawling a URL again
+    "cooldown": 86400,  # Required cooldown in ms before crawling a URL again
+    "ignore_types": ['i', '3']  # Types of items that should be ignored and not recorded
 }
 
 ###########################
+
+crawl_types = ['1']
+
+robotstxt = {}
+db = {'menus': {}, 'items': {}}
 
 if os.path.isfile(settings['db_filename']):
     with open(settings['db_filename'], 'r') as fp:
@@ -86,7 +85,7 @@ def crawl(url, cooldown=86400):
                 db['menus'][req.url()] = {'last_crawled': 0}
                 dead = False
                 for item in resp.menu():
-                    if item.type not in ignore_types:
+                    if item.type not in settings['ignore_types']:
                         surl = item.request().url()
                         record = True
                         if settings['limit_host']:
