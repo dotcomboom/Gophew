@@ -39,6 +39,8 @@ def save():
 
 def allowed_to_crawl(url):
     req = pituophis.parse_url(url)
+    if 'URL:' in req.path:
+        return False
     if req.host not in robotstxt:
         try:
             resp = req.get()
