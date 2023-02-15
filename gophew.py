@@ -40,17 +40,19 @@ def alt(request):
         typestring = request.path.replace(settings['search_path'], '').replace('/', '')
         types = list(typestring)
         menu = []
-        if not settings['root_text'] is None:
+        if settings['root_text'] is not None:
             menu.append(p.Item(itype='1', text=settings['root_text'], path='/', host=request.host, port=request.port))
-        if not settings['new_search_text'] is None:
+        if settings['new_search_text'] is not None:
             menu.append(p.Item(itype='7', text=settings['new_search_text'], path=settings['search_path'], host=request.host, port=request.port))
-        if (not request.path == settings['search_path']) and not settings['new_search_text_same_filter'] is None:
+        if (
+            request.path != settings['search_path']
+            and settings['new_search_text_same_filter'] is not None
+        ):
             menu.append(p.Item(itype='7', text=settings['new_search_text_same_filter'], path=request.path, host=request.host, port=request.port))
-        if not settings['results_caption'] is None:
+        if settings['results_caption'] is not None:
             menu.append(p.Item(text=settings['results_caption'].format(request.query, len(db['items']))))
-        if not settings['types_caption'] is None:
-            if len(types):
-                menu.append(p.Item(text=settings['types_caption'].format(', '.join(types))))
+        if settings['types_caption'] is not None and len(types):
+            menu.append(p.Item(text=settings['types_caption'].format(', '.join(types))))
         if (not settings['allow_empty_queries']) and request.query == '':
             return p.Item(text=settings['empty_queries_not_allowed_msg'], itype='3')
         items = db['items']
@@ -61,25 +63,33 @@ def alt(request):
             if request.query.lower() in sampling.lower():
                 req = p.parse_url(item)
                 yes = False
-                if len(types) == 0:
+                if types and req.type in types or not types:
                     yes = True
-                else:
-                    if req.type in types:
-                        yes = True
                 if yes:
                     try:
-                        menu.append(p.Item(text=''))
-                        menu.append(p.Item(itype=req.type, text=items[item]['titles'][0], path=req.path, host=req.host, port=req.port))
-                        menu.append(p.Item(text='URL: ' + req.url()))
+                        menu.extend(
+                            (
+                                p.Item(text=''),
+                                p.Item(
+                                    itype=req.type,
+                                    text=items[item]['titles'][0],
+                                    path=req.path,
+                                    host=req.host,
+                                    port=req.port,
+                                ),
+                                p.Item(text=f'URL: {req.url()}'),
+                            )
+                        )
                         if len(items[items]['titles']) > 1:
                             if settings['alternate_titles']:
                                 menu.append(item(text='Alternate titles:'))
-                                for title in items[item]['titles'][1:]:
-                                    menu.append(item(text='  ' + title))
+                                menu.extend(item(text=f'  {title}') for title in items[item]['titles'][1:])
                             if settings['referrers']:
                                 menu.append(p.Item(text='Referred by:'))
-                                for referrer in items[item]['referrers']:
-                                    menu.append(p.Item(text='  ' + referrer))
+                                menu.extend(
+                                    p.Item(text=f'  {referrer}')
+                                    for referrer in items[item]['referrers']
+                                )
                     except:
                         pass
         return menu
